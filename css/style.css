@@ -24,7 +24,7 @@ body {
 }
 .header1__btn1 {
   justify-self: center;
-  cursor: pointer;
+  /* cursor: pointer; For further development*/
   border: none;
   outline: none;
   background-color: transparent;
@@ -36,7 +36,7 @@ body {
 
 .header1__btn2 {
   justify-self: center;
-  cursor: pointer;
+  /* cursor: pointer; For further development */
   border: none;
   outline: none;
   background-color: transparent;
@@ -92,6 +92,10 @@ body {
   font-size: 1.8vw;
 }
 
+.item__edit i:hover {
+  color: orange;
+}
+
 .item__act {
   color: rgb(79, 78, 78);
   justify-self: center;
@@ -111,8 +115,14 @@ body {
 .item__del i {
   font-size: 1.8vw;
 }
+.item__del:hover i {
+  color: red;
+}
 .item__act i {
   font-size: 1.8vw;
+}
+.item__act i:hover {
+  color: blue;
 }
 .btn-create {
   width: 7vw;
