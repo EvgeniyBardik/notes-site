@@ -1,7 +1,6 @@
-import { updNotes, updCatList, swicher } from './src/views.js';
+import { updateCategoriesList, swicher } from './src/views.js';
 const init = () => {
-    updNotes('active')
     swicher('active')
-    updCatList()
+    updateCategoriesList()
 }
 init()

@@ -1,59 +1,87 @@
-import { createElement } from './helper.js';
-import { getCategory, contPrev, getIco, countActive, countArchive, dates, deleteNote, loadNotes, loadCategories, recordNote, actSwitchNote, updateNote } from './controllers.js';
+import { getCategory, contentPreview, iconName, countActive, countArchive, dates, deleteNote, loadNotes, loadCategories, recordNote, activeSwitchNote, updateNote } from './controllers.js';
 
 const header1 = document.querySelector('.items-list')
 const formPlace = document.querySelector('.for-form')
-const header2 = document.querySelector('.cat-list')
+const header2 = document.querySelector('.categories-list')
 
-const actBtn = document.querySelector('.header2__switch-act')
-const arcBtn = document.querySelector('.header2__switch-arc')
-const buttonCreate = document.querySelector('.btn-create')
+const activeButton = document.querySelector('.header2__switch-active')
+const archivedButton = document.querySelector('.header2__switch-archived')
+const buttonCreate = document.querySelector('.button-create')
+buttonCreate.addEventListener('click', (e) => buttonCreateHandler(e))
+activeButton.addEventListener('click', () => swicher('active'))
+archivedButton.addEventListener('click', () => swicher('archived'))
 
-buttonCreate.addEventListener('click', (e) => bntCreateHandler(e))
-actBtn.addEventListener('click', () => swicher('active'))
-arcBtn.addEventListener('click', () => swicher('archived'))
+// Notes Template
+const createNote = (note) => {
+    header1.insertAdjacentHTML("beforeEnd", `
+        <div class="item" data-id=${note.id}>
+            <div class="item__ico"><i class="material-icons">${iconName(note.category)}</i></div>
+            <div class="item__name">${note.name}</div>
+            <div class="item__created">${note.created}</div>
+            <div class="item__category">${getCategory(note.category)}</div>
+            <div class="item__content">${contentPreview(note.content)}</div>
+            <div class="item__dates">${dates(note.content)}</div>
+            <button class="item__edit"><i class="material-icons">create</i></button>
+            <button class="item__active"><i class="material-icons">archive</i></button>
+            <button class="item__delete"><i class="material-icons">delete</i></button>
+        </div>
+      `);
+    addEventListeners()
+}
 
+// Statistics Template
+const updateCategoriesList = () => {
+    header2.replaceChildren()
+    const categories = loadCategories()
+    categories.forEach(category => {
+        header2.insertAdjacentHTML("beforeEnd", `
+        <div class="item2">
+            <div class="item2__ico"><i class="material-icons">${iconName(category.id)}</i></div>
+            <div class="item2__category">${category.name}</div>
+            <div class="item2__active">${countActive(category.id)}</div>
+            <div class="item2__archived">${countArchive(category.id)}</div>
+        </div>
+      `)
+    })
+}
+
+// Form Template
 const getSelect = () => {
-    const noteSelect = createElement('select', { className: 'form-note__select' });
-    for (let cat of loadCategories()) {
-        const noteOption = createElement('option', { value: `${cat.id}` }, `${cat.name}`);
-        noteSelect.appendChild(noteOption)
-    }
-    return noteSelect
+    const categories = loadCategories()
+    const options = categories.reduce((options, category) => (
+        options + `<option value="${category.id}">${category.name}</option>`), '')
+    return options
 }
 
 const showForm = () => {
-    const noteTitle = createElement('h1', { className: 'form-note__title' }, 'Create Note');
-    const noteLabel1 = createElement('div', { className: 'form-note__label1' }, 'Name:');
-    const noteName = createElement('input', { className: 'form-note__name' });
-    const noteLabel2 = createElement('div', { className: 'form-note__label2' }, 'Category:');
-    const noteLabel3 = createElement('div', { className: 'form-note__label3' }, 'Content:');
-    const noteContent = createElement('textarea', { className: 'form-note__content', cols: '35', rows: '10' });
-    const noteCheckBox = createElement('input', { className: 'form-note__checkbox', type: 'checkbox', checked: 'true' });
-    const noteLabel4 = createElement('span', { className: 'form-note__label4' }, 'Active');
-    const noteCheckboxDiv = createElement('div', { className: 'form-note__checkboxdiv' }, noteCheckBox, noteLabel4);
-    const noteBtnOk = createElement('input', { className: 'form-note__button1', type: 'submit', value: 'Create' });
-    const noteBtnCancel = createElement('input', { className: 'form-note__button2', type: 'reset', value: 'Cancel' });
-    const noteDivBtn = createElement('div', {}, noteBtnOk, noteBtnCancel)
-    const noteForm = createElement('form', { className: 'form-note' }, noteTitle, noteLabel1, noteName, noteLabel2, getSelect(), noteLabel3, noteContent, noteCheckboxDiv, noteDivBtn);
-
-    return noteForm
+    formPlace.insertAdjacentHTML("beforeBegin", `
+        <form class="form-note">
+            <h1 class="form-note__title">Create Note</h1>
+            <div class="form-note__label1">Name:</div>
+            <input class="form-note__name">
+            <div class="form-note__label2">Category:</div>
+            <select class="form-note__select">
+                ${getSelect()}
+            </select>
+            <div class="form-note__label3">Content:</div>
+            <textarea class="form-note__content"  cols=35, rows=10 ></textarea>
+            <div class="form-note__checkboxdiv">
+                <input class="form-note__checkbox" type=checkbox checked>
+                <span class="form-note__label4">Active</span>           
+            </div>
+            <div>
+                <input class="form-note__button1" type=submit value="Create">
+                <input class="form-note__button2" type=reset value="Cancel">
+            </div>
+        </form>
+      `);
 }
-
-const clearNotesViews = () => {
-    while (header1.firstChild) {
-        header1.removeChild(header1.firstChild);
-    }
-}
-
-const bntCreateHandler = (e) => {
-    clearNotesViews()
+// Create Function
+const buttonCreateHandler = (e) => {
+    header1.replaceChildren()
     buttonCreate.classList.add('hidden')
-
-    formPlace.appendChild(showForm())
-
+    showForm()
     const noteAdd = document.querySelector('.form-note');
-
     const elementPosition = noteAdd.getBoundingClientRect().top;
     const offsetPosition = elementPosition - 20;
     window.scrollBy({
@@ -73,8 +101,8 @@ const bntCreateHandler = (e) => {
         } else {
             recordNote(name, category, content, checkbox)
             noteAdd.remove()
-            updNotes('active')
-            updCatList()
+            updateNotes('active')
+            updateCategoriesList()
             buttonCreate.classList.remove('hidden')
         }
     }
@@ -83,30 +111,32 @@ const bntCreateHandler = (e) => {
     buttonCancel.addEventListener('click', (e) => {
         e.preventDefault()
         noteAdd.remove()
-        updNotes('active')
-        updCatList()
+        updateNotes('active')
+        updateCategoriesList()
         buttonCreate.classList.remove('hidden')
     }
     )
 }
 
+// Swicher for Statistics & Notes Uptater
 function swicher(status) {
     if (status === 'active') {
-        actBtn.classList.add('active')
-        arcBtn.classList.remove('active')
-        updNotes('active')
+        activeButton.classList.add('active')
+        archivedButton.classList.remove('active')
+        updateNotes('active')
     }
     if (status === 'archived') {
-        arcBtn.classList.add('active')
-        actBtn.classList.remove('active')
-        updNotes('archived')
+        archivedButton.classList.add('active')
+        activeButton.classList.remove('active')
+        updateNotes('archived')
     }
 
 }
 
-const handleEditBtn = (event) => {
+// Edit Function
+const handleEditButton = (event) => {
     const noteDiv = event.target.parentNode.parentNode
-    const id = noteDiv['data-id']
+    const id = +noteDiv.getAttribute('data-id')
 
     buttonCreate.classList.add('hidden')
     if (document.querySelector('.form-note')) {
@@ -114,7 +144,7 @@ const handleEditBtn = (event) => {
         document.querySelector('.hidden').classList.remove('hidden')
     }
     noteDiv.classList.add('hidden')
-    formPlace.appendChild(showForm())
+    showForm()
     const noteEdit = document.querySelector('.form-note');
     const elementPosition = noteEdit.getBoundingClientRect().top;
     const offsetPosition = elementPosition - 20;
@@ -122,7 +152,7 @@ const handleEditBtn = (event) => {
         top: offsetPosition,
         behavior: 'smooth'
     })
-    const note = loadNotes().find(note => note.id === id)
+    const note = loadNotes().find(note => note.id === +id)
     noteEdit.querySelector('.form-note__name').value = note.name
     noteEdit.querySelector('.form-note__select').value = note.category
     noteEdit.querySelector('.form-note__content').value = note.content
@@ -142,13 +172,13 @@ const handleEditBtn = (event) => {
         } else {
             updateNote(id, name, category, content, checkbox)
             noteEdit.remove()
-            noteDiv.querySelector('.material-icons').replaceWith(getIco(category))
+            noteDiv.querySelector('.material-icons').innerHTML = iconName(note.category)
             noteDiv.querySelector('.item__name').innerHTML = name
             noteDiv.querySelector('.item__category').innerHTML = getCategory(category)
-            noteDiv.querySelector('.item__content').innerHTML = contPrev(content)
+            noteDiv.querySelector('.item__content').innerHTML = contentPreview(content)
             noteDiv.querySelector('.item__dates').innerHTML = dates(content)
-            noteDiv.classList.remove('hidden')
-            updCatList()
+            note.active ? swicher('active') : swicher('archived')
+            updateCategoriesList()
             buttonCreate.classList.remove('hidden')
         }
     }
@@ -163,96 +193,58 @@ const handleEditBtn = (event) => {
     )
 }
 
-const handleActBtn = (event) => {
+// Swicher between Active/Archived status
+const handleActiveButton = (event) => {
     const noteDiv = event.target.parentNode.parentNode
-    const id = noteDiv['data-id']
+    const id = noteDiv.getAttribute('data-id')
     header1.removeChild(noteDiv)
-    actSwitchNote(id)
-    updCatList()
+    activeSwitchNote(id)
+    updateCategoriesList()
 }
 
-const handleDelBtn = (event) => {
+// Delete Function
+const handleDeleteButton = (event) => {
     const noteDiv = event.target.parentNode.parentNode
-    const id = noteDiv['data-id']
+    const id = noteDiv.getAttribute('data-id')
     header1.removeChild(noteDiv)
     deleteNote(id)
+    updateCategoriesList()
 }
+// Listners for Notes buttons
+const addEventListeners = () => {
+    const noteElement = header1.lastElementChild
+    const itemButtonEdit = noteElement.querySelector('.item__edit')
+    const itemButtonActive = noteElement.querySelector('.item__active')
+    const itemButtonDelete = noteElement.querySelector('.item__delete')
+    const itemContent = noteElement.querySelector('.item__content')
 
-const addEventListeners = (item) => {
-
-    const itemBtnEdit = item.querySelector('.item__edit')
-    const itemBtnAct = item.querySelector('.item__act')
-    const itemBtnDel = item.querySelector('.item__del')
-    const itemContent = item.querySelector('.item__content')
-
-    itemBtnEdit.addEventListener('click', handleEditBtn)
-    itemBtnAct.addEventListener('click', handleActBtn)
-    itemBtnDel.addEventListener('click', handleDelBtn)
+    itemButtonEdit.addEventListener('click', handleEditButton)
+    itemButtonActive.addEventListener('click', handleActiveButton)
+    itemButtonDelete.addEventListener('click', handleDeleteButton)
     itemContent.addEventListener('click', handleContent)
-
-    return item
+}
+// Updeter for note list
+const updateNotes = (status) => {
+    header1.replaceChildren()
+    buttonCreate.classList.remove('hidden')
+    const notes = loadNotes(status)
+    notes.forEach(note => createNote(note))
 }
 
+// Function for detailed/reduced view of content
 const handleContent = (e) => {
     const noteDiv = e.target.parentNode
-    const id = noteDiv['data-id']
-    const note = loadNotes().find(note => note.id === id)
+    const id = noteDiv.getAttribute('data-id')
+    const note = loadNotes().find(note => note.id === +id)
     e.target.classList.toggle('full')
     if (e.target.classList.contains('full')) {
         e.target.innerHTML = note.content
     } else {
-        e.target.innerHTML = contPrev(note.content)
+        e.target.innerHTML = contentPreview(note.content)
     }
 
 }
 
-const createNote = (note) => {
-    const itemIco = createElement('div', { className: 'item__ico' }, getIco(note.category));
-    const itemName = createElement('div', { className: 'item__name' }, note.name);
-    const itemCreated = createElement('div', { className: 'item__created' }, note.created);
-    const itemCategory = createElement('div', { className: 'item__category' }, getCategory(note.category));
-    const itemContent = createElement('div', { className: 'item__content' }, contPrev(note.content));
-    const itemDates = createElement('div', { className: 'item__dates' }, dates(note.content));
-    const itemBtnEditIco = createElement('i', { className: 'material-icons' }, 'create');
-    const itemBtnEdit = createElement('button', { className: 'item__edit' }, itemBtnEditIco);
-    const itemBtnActIco = createElement('i', { className: 'material-icons' }, 'archive');
-    const itemBtnAct = createElement('button', { className: 'item__act' }, itemBtnActIco);
-    const itemBtnDelIco = createElement('i', { className: 'material-icons' }, 'delete');
-    const itemBtnDel = createElement('button', { className: 'item__del' }, itemBtnDelIco);
-    const itemDiv = createElement('div', { className: 'item', 'data-id': note.id }, itemIco, itemName, itemCreated, itemCategory, itemContent, itemDates, itemBtnEdit, itemBtnAct, itemBtnDel);
-
-    return addEventListeners(itemDiv)
-
-}
-
-const updNotes = (status) => {
-    clearNotesViews()
-    if (formPlace.firstChild) {
-        formPlace.removeChild(formPlace.firstChild);
-        buttonCreate.classList.remove('hidden')
-    }
-    const notes = loadNotes(status)
-    if (notes.length > 0) {
-        for (let note of notes) {
-            const noteItem = createNote(note)
-            header1.appendChild(noteItem)
-        }
-    }
-}
 
 
-const updCatList = () => {
-    while (header2.firstChild) {
-        header2.removeChild(header2.firstChild);
-    }
-    const categories = loadCategories()
-    for (let category of categories) {
-        const itemIco = createElement('div', { className: 'item2__ico' }, getIco(category.id));
-        const itemCategory = createElement('div', { className: 'item2__category' }, category.name);
-        const itemActive = createElement('div', { className: 'item2__active' }, countActive(category.id));
-        const itemArchived = createElement('div', { className: 'item2__archived' }, countArchive(category.id));
-        const itemDiv = createElement('div', { className: 'item2' }, itemIco, itemCategory, itemActive, itemArchived);
-        header2.appendChild(itemDiv)
-    }
-}
-export { updNotes, updCatList, swicher }
+export { updateNotes, updateCategoriesList, swicher }

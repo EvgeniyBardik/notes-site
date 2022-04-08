@@ -1,15 +1,11 @@
-import { createElement } from './helper.js';
 import { Notes, Categories } from './models.js';
-import { updNotes, updCatList } from './views.js';
-
-
 
 const getCategory = (noteId) => {
     const catName = Categories.find((cat) => cat.id === noteId)
     return catName.name
 }
 
-const contPrev = (content) => {
+const contentPreview = (content) => {
     if (content.length > 15) {
         return content.slice(0, 15) + '...'
     }
@@ -18,7 +14,7 @@ const contPrev = (content) => {
     }
 }
 
-const icoName = (categoryId) => {
+const iconName = (categoryId) => {
     if (categoryId === 1) {
         return 'local_grocery_store'
     }
@@ -31,21 +27,21 @@ const icoName = (categoryId) => {
         return 'info_outline'
     }
 }
-const getIco = (categoryId) => {
-    const task = createElement('i', { className: 'material-icons' }, icoName(categoryId));
-    return task
+
+
+const countActive = (categoryId) => {
+    return Notes.filter(notes => notes.active === true && notes.category === categoryId).length
 }
 
-const countActive = (catId) => {
-    return Notes.filter(notes => notes.active === true && notes.category === catId).length
+const countArchive = (categoryId) => {
+    return Notes.filter(notes => notes.active === false && notes.category === categoryId).length
 }
-const countArchive = (catId) => {
-    return Notes.filter(notes => notes.active === false && notes.category === catId).length
-}
+
 const dates = (text) => {
     const result = text.match(/\d+\/\d+\/\d+/g) || []
     return result.join(', ')
 }
+
 const getDateCreated = () => {
     const options = { month: 'long', day: 'numeric', year: 'numeric' }
     const date = new Date()
@@ -54,9 +50,8 @@ const getDateCreated = () => {
 
 
 const deleteNote = (noteIdDel) => {
-    const index = Notes.findIndex(note => note.id === noteIdDel)
+    const index = Notes.findIndex(note => note.id == noteIdDel)
     Notes.splice(index, 1)
-    updCatList()
 }
 
 const loadNotes = (param) => {
@@ -92,13 +87,13 @@ const recordNote = (name, category, content, active) => {
     Notes.push(note)
 }
 
-const actSwitchNote = (switchId) => {
-    const index = Notes.findIndex(note => note.id === switchId)
+const activeSwitchNote = (switchId) => {
+    const index = Notes.findIndex(note => note.id == switchId)
     Notes[index].active = !Notes[index].active
 }
 
 const updateNote = (id, name, category, content, checkbox) => {
-    const index = Notes.findIndex(note => note.id === id)
+    const index = Notes.findIndex(note => note.id === +id)
     Notes[index].name = name
     Notes[index].category = category
     Notes[index].content = content
@@ -108,4 +103,4 @@ const updateNote = (id, name, category, content, checkbox) => {
 const loadCategories = () => Categories
 
 
-export { getCategory, contPrev, getIco, countActive, countArchive, dates, getDateCreated, deleteNote, loadNotes, loadCategories, recordNote, actSwitchNote, updateNote }
+export { getCategory, contentPreview, countActive, countArchive, dates, getDateCreated, deleteNote, loadNotes, loadCategories, recordNote, activeSwitchNote, updateNote, iconName }
